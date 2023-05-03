@@ -1,0 +1,14 @@
+name "sily-raylib"
+description "Personal wrapper for raylib-d"
+authors "Alisa Lain"
+copyright "Copyright © 2023, Alisa Lain"
+license "MIT"
+dependency "sily" path="/g/sily-dlang/" // version="~>1.4.1"
+dependency "raylib-d" version="~>4.5.1"
+sourcePaths "raylib/"
+importPaths "raylib/"
+targetType "library"
+targetPath "bin/"
+
+
+
