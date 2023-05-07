@@ -44,31 +44,119 @@ void crop(ref rImage img, vec4 _crop) {
 // void ImageToPOT(Image *image, Color fill);                                                         // Convert image to POT (power-of-two)
 // void ImageCrop(Image *image, Rectangle crop);                                                      // Crop an image to a defined rectangle
 
+void alphaCrop(ref rImage img, float threshold) {
+    rl.ImageAlphaCrop(&img, threshold);
+}
 
+void alphaClear(ref rImage img, col color, float threshold) {
+    rl.ImageAlphaClear(&img, color.rayType, threshold);
+}
+
+void alphaMask(ref rImage img, rImage _alphaMask) {
+    rl.ImageAlphaMask(&img, _alphaMask);
+}
 
 // void ImageAlphaCrop(Image *image, float threshold);                                                // Crop image depending on alpha value
 // void ImageAlphaClear(Image *image, Color color, float threshold);                                  // Clear alpha channel to desired color
 // void ImageAlphaMask(Image *image, Image alphaMask);                                                // Apply alpha mask to image
+
+void alphaPremultiply(ref rImage img) {
+    rl.ImageAlphaPremultiply(&img);
+}
+
+void blurGaussian(ref rImage img, int blurSize) {
+    rl.ImageBlurGaussian(&img, blurSize);
+}
+
+void resize(ref rImage img, int newWidth, int newHeight) {
+    rl.ImageResize(&img, newWidth, newHeight);
+}
+
 // void ImageAlphaPremultiply(Image *image);                                                          // Premultiply alpha channel
 // void ImageBlurGaussian(Image *image, int blurSize);                                                // Apply Gaussian blur using a box blur approximation
 // void ImageResize(Image *image, int newWidth, int newHeight);                                       // Resize image (Bicubic scaling algorithm)
+
+void resizeNN(ref rImage img, int newWidth, int newHeight) {
+    rl.ImageResizeNN(&img, newWidth, newHeight);
+}
+
+void resizeCanvas(ref rImage img, int newWidth, int newHeight, int offsetX, int offsetY, col fill) {
+    rl.ImageResizeCanvas(&img, newWidth, newHeight, offsetX, offsetY, fill.rayType);
+}
+
+void mipmaps(ref rImage img) {
+    rl.ImageMipmaps(&img);
+}
+
 // void ImageResizeNN(Image *image, int newWidth,int newHeight);                                      // Resize image (Nearest-Neighbor scaling algorithm)
 // void ImageResizeCanvas(Image *image, int newWidth, int newHeight, int offsetX, int offsetY, Color fill);  // Resize canvas and fill with color
 // void ImageMipmaps(Image *image);                                                                   // Compute all mipmap levels for a provided image
+
+void dither(ref rImage img, int rBpp, int gBpp, int bBpp, int aBpp) {
+    rl.ImageDither(&img, rBpp, gBpp, bBpp, aBpp);
+}
+
+void flipVertical(ref rImage img) {
+    rl.ImageFlipVertical(&img);
+}
+
+void flipHorizontal(ref rImage img) {
+    rl.ImageFlipHorizontal(&img);
+}
+
 // void ImageDither(Image *image, int rBpp, int gBpp, int bBpp, int aBpp);                            // Dither image data to 16bpp or lower (Floyd-Steinberg dithering)
 // void ImageFlipVertical(Image *image);                                                              // Flip image vertically
 // void ImageFlipHorizontal(Image *image);                                                            // Flip image horizontally
+
+void rotateCW(ref rImage img) {
+    rl.ImageRotateCW(&img);
+}
+
+void rotateCWW(ref rImage img) {
+    rl.ImageRotateCCW(&img);
+}
+
+void colorTint(ref rImage img, col color) {
+    rl.ImageColorTint(&img, color.rayType);
+}
+
 // void ImageRotateCW(Image *image);                                                                  // Rotate image clockwise 90deg
 // void ImageRotateCCW(Image *image);                                                                 // Rotate image counter-clockwise 90deg
 // void ImageColorTint(Image *image, Color color);                                                    // Modify image color: tint
+
+void colorInvert(ref rImage img) {
+    rl.ImageColorInvert(&img);
+}
+
+void colorGrayscale(ref rImage img) {
+    rl.ImageColorGrayscale(&img);
+}
+
+void colorContrast(ref rImage img, float contrast) {
+    rl.ImageColorContrast(&img, contrast);
+}
+
 // void ImageColorInvert(Image *image);                                                               // Modify image color: invert
 // void ImageColorGrayscale(Image *image);                                                            // Modify image color: grayscale
 // void ImageColorContrast(Image *image, float contrast);                                             // Modify image color: contrast (-100 to 100)
+
+void colorBrightness(ref rImage img, int brightness) {
+    rl.ImageColorBrightness(&img, brightness);
+}
+
+void colorReplace(ref rImage img, col color, col replace) {
+    rl.ImageColorReplace(&img, color.rayType, replace.rayType);
+}
+
 // void ImageColorBrightness(Image *image, int brightness);                                           // Modify image color: brightness (-255 to 255)
 // void ImageColorReplace(Image *image, Color color, Color replace);                                  // Modify image color: replace color
 
-vec4 alphaBorder(rImage img, float threshold) {
+vec4 getAlphaBorder(rImage img, float threshold) {
     return rl.GetImageAlphaBorder(img, threshold).rayType;
+}
+
+col getImageColor(rImage img, int x, int y) {
+    return rl.GetImageColor(img, x, y).rayType;
 }
 
 // Rectangle GetImageAlphaBorder(Image image, float threshold);                                       // Get image alpha border rectangle
@@ -76,18 +164,86 @@ vec4 alphaBorder(rImage img, float threshold) {
 //
 // // Image drawing functions
 // // NOTE: Image software-rendering functions (CPU)
+
+void clearBackground(ref rImage dst, col color) {
+    rl.ImageClearBackground(&dst, color.rayType);
+}
+
+void drawPixel(ref rImage dst, int posX, int posY, col color) {
+    rl.ImageDrawPixel(&dst, posX, posY, color.rayType);
+}
+
+void drawPixelV(ref rImage dst, vec2 position, col color) {
+    rl.ImageDrawPixelV(&dst, position.rayType, color.rayType);
+}
+
 // void ImageClearBackground(Image *dst, Color color);                                                // Clear image background with given color
 // void ImageDrawPixel(Image *dst, int posX, int posY, Color color);                                  // Draw pixel within an image
 // void ImageDrawPixelV(Image *dst, Vector2 position, Color color);                                   // Draw pixel within an image (Vector version)
+
+void drawLine(ref rImage dst, int startPosX, int startPosY, int endPosX, int endPosY, col color) {
+    rl.ImageDrawLine(&dst, startPosX, startPosY, endPosX, endPosY, color.rayType);
+}
+
+void drawLineV(ref rImage dst, vec2 start, vec2 end, col color) {
+    rl.ImageDrawLineV(&dst, start.rayType, end.rayType, color.rayType);
+}
+
+void drawCircle(ref rImage dst, int centerX, int centerY, int radius, col color) {
+    rl.ImageDrawCircle(&dst, centerX, centerY, radius, color.rayType);
+}
+
 // void ImageDrawLine(Image *dst, int startPosX, int startPosY, int endPosX, int endPosY, Color color); // Draw line within an image
 // void ImageDrawLineV(Image *dst, Vector2 start, Vector2 end, Color color);                          // Draw line within an image (Vector version)
 // void ImageDrawCircle(Image *dst, int centerX, int centerY, int radius, Color color);               // Draw a filled circle within an image
+
+void drawCircleV(ref rImage dst, vec2 center, int radius, col color) {
+    rl.ImageDrawCircleV(&dst, center.rayType, radius, color.rayType);
+}
+
+void drawCircleLines(ref rImage dst, int centerX, int centerY, int radius, col color) {
+    rl.ImageDrawCircleLines(&dst, centerX, centerY, radius, color.rayType);
+}
+
+void drawCircleLinesV(ref rImage dst, vec2 center, int radius, col color) {
+    rl.ImageDrawCircleLinesV(&dst, center.rayType, radius, color.rayType);
+}
+
 // void ImageDrawCircleV(Image *dst, Vector2 center, int radius, Color color);                        // Draw a filled circle within an image (Vector version)
 // void ImageDrawCircleLines(Image *dst, int centerX, int centerY, int radius, Color color);          // Draw circle outline within an image
 // void ImageDrawCircleLinesV(Image *dst, Vector2 center, int radius, Color color);                   // Draw circle outline within an image (Vector version)
+
+void drawRectangle(ref rImage dst, int posX, int posY, int width, int height, col color) {
+    rl.ImageDrawRectangle(&dst, posX, posY, width, height, color.rayType);
+}
+
+void drawRectangleV(ref rImage dst, vec2 position, vec2 size, col color) {
+    rl.ImageDrawRectangleV(&dst, position.rayType, size.rayType, color.rayType);
+}
+
+void drawRectangleRec(ref rImage dst, vec4 rec, col color) {
+    rl.ImageDrawRectangleRec(&dst, rayType!rRect(rec), color.rayType);
+}
+
 // void ImageDrawRectangle(Image *dst, int posX, int posY, int width, int height, Color color);       // Draw rectangle within an image
 // void ImageDrawRectangleV(Image *dst, Vector2 position, Vector2 size, Color color);                 // Draw rectangle within an image (Vector version)
 // void ImageDrawRectangleRec(Image *dst, Rectangle rec, Color color);                                // Draw rectangle within an image
+
+void drawRectangleLines(ref rImage dst, vec4 rec, int thick, col color) {
+    rl.ImageDrawRectangleLines(&dst, rayType!rRect(rec), thick, color.rayType);
+}
+
+void drawImage(ref rImage dst, rImage src, vec4 srcRec, vec4 dstRec, col tint) {
+    rl.ImageDraw(&dst, src, rayType!rRect(srcRec), rayType!rRect(dstRec), tint.rayType);
+}
+
+void drawText(ref rImage dst, const char text, int posX, int posY, int fontSize, col color) {
+    rl.ImageDrawText(&dst, text, posX, posY, fontSize, color.rayType);
+}
+
+void drawTextEx(ref rImage dst, Font font, const char text, vec2 position, float fontSize, float spacing, col tint) {
+    rl.ImageDrawTextEx(&dst, font, text, position.rayType, fontSize, spacing, tint.rayType);
+}
 // void ImageDrawRectangleLines(Image *dst, Rectangle rec, int thick, Color color);                   // Draw rectangle lines within an image
 // void ImageDraw(Image *dst, Image src, Rectangle srcRec, Rectangle dstRec, Color tint);             // Draw a source image within a destination image (tint applied to source)
 // void ImageDrawText(Image *dst, const char *text, int posX, int posY, int fontSize, Color color);   // Draw text (using default font) within an image (destination)
