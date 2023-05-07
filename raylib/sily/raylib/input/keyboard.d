@@ -1,7 +1,9 @@
+/// Keyboard input
 module sily.raylib.input.keyboard;
 
 import rl = raylib;
 
+/// Keyboard keys
 alias Key = rl.KeyboardKey;
 
 /// Is key pressed
@@ -22,15 +24,6 @@ bool isPressed(Key key) {
 /// Is key released
 bool isReleased(Key key) {
     return rl.IsKeyReleased(key);
-}
-
-// TODO: move?
-void setExitKey(int key) {
-    rl.SetExitKey(key);
-}
-
-void setExitKey(Key key) {
-    setExitKey(cast(int) key);
 }
 
 int getKeyPressed() {

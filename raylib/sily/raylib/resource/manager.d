@@ -1,3 +1,4 @@
+/// Resource loading and caching utils
 module sily.raylib.resource.manager;
 
 import std.file: isDir, exists;
@@ -30,8 +31,29 @@ void setResourcePath(string path) {
     }
 }
 
-private T nopath(T)(string path) {
-    log!WARNING("Resource at path \"" ~ path ~ "\" does not exist.");
+/// Returns base path
+string resourcePath() {
+    return _pathBase;
+}
+
+private bool _abortOnMissing = true;
+
+/++
+Sets if program should exit if resource is missing
+Params:
+    abort = default true
++/
+void setAbortOnMissing(bool abort) {
+    _abortOnMissing = abort;
+}
+
+T nopath(T)(string path) {
+    if (_abortOnMissing) {
+        log!FATAL("Resource at path \"" ~ path ~ "\" does not exist.");
+        assert(0);
+    } else {
+        log!WARNING("Resource at path \"" ~ path ~ "\" does not exist.");
+    }
     return T.init;
 }
 
@@ -48,32 +70,168 @@ private auto _fontResource      = ResourceType!Font(&LoadFont, &UnloadFont);
 private auto _waveResource      = ResourceType!Wave(&LoadWave, &UnloadWave);
 private auto _soundResource     = ResourceType!Sound(&LoadSound, &UnloadSound);
 private auto _musicResource     = ResourceType!Music(&LoadMusicStream, &UnloadMusicStream);
+private auto _vrconfigResource  = ResourceType!VrStereoConfig(null, &UnloadVrStereoConfig);
+private auto _shaderResource    = ResourceType!Shader(null, &UnloadShader);
+private auto _renderTexResource = ResourceType!RenderTexture(null, &UnloadRenderTexture);
+private auto _materialResource  = ResourceType!Material(null, &UnloadMaterial);
+private auto _animationResource = ResourceType!ModelAnimation(null, &UnloadModelAnimation);
+private auto _audioResource     = ResourceType!AudioStream(null, &UnloadAudioStream);
+private auto _meshResource      = ResourceType!Mesh(null, &UnloadMesh);
+// TODO: dropped files
 
-/// Load resource from path or from cache if available
+// TODO: resource UID
+// TODO: threaded load
+
+private bool cached(T)(string p_name, ResourceType!T* ptr) {
+    return (p_name in (*ptr)._cache) !is null;
+}
+
+/++
+Load resource from path or from cache if available
+Params:
+    path = Path to file or cached resource name
+Example:
+---
+// Load model from file
+load!Model("res/model/house.obj"); 
+// This is going to load cached model
+load!Model("res/model/house.obj"); 
+// Creates model from mesh
+loadModelMesh("newHouse", houseMesh);
+// Returns newly cached version
+load!Model("newHouse");
+---
++/
 T load(T)(string path) if (!isSpecial!T) {
-    string fp = path.makePath;
-    if (!fp.exists) return nopath!T(fp);
     ResourceType!T* ptr = getResourcePtr!T;
-    if ((path in (*ptr)._cache) is null) {
+    if (path.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        if ((*ptr)._loadFunc is null) {
+            fatal("Missing load function for type \"" ~ T.stringof ~ "\".");
+            assert(0);
+        }
+        string fp = path.makePath;
+        if (!fp.exists) return nopath!T(fp);
         T res = (*ptr)._loadFunc(fp.toStringz); 
         cache!T(path, res);
         return res;
+    }
+}
+// Only loading cache for resources that require 2 and more args in load
+/// Ditto
+T load(T)(string p_name) if (isSpecialMulti!T) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (p_name.cached(ptr)) {
+        return (*ptr)._cache[p_name];
     } else {
+        warning("Resource \"" ~ p_name ~ "\" is not cached. Returning \"" ~ T.stringof ~ ".init\".");
+        return T.init;
+    }
+}
+/// Ditto
+T load(T)(string p_name, VrDeviceInfo dev) if (is(T == VrStereoConfig)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (p_name.cached(ptr)) {
         return (*ptr)._cache[path];
+    } else {
+        T res = LoadVrStereoConfig(dev); 
+        cache!T(path, res);
+        return res;
+    }
+}
+/// Ditto
+T load(T)(string p_name, string vertPath, string fragPath) if (is(T == Shader)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (p_name.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        string fp1 = vertPath.makePath;
+        string fp2 = fragPath.makePath;
+        if (!fp1.exists) return nopath!T(fp1);
+        if (!fp2.exists) return nopath!T(fp2);
+        T res = LoadShader(fp1.toStringz, fp2.toStringz); 
+        cache!T(path, res);
+        return res;
+    }
+}
+/// Ditto
+T load(T)(string p_name, int[2] size...) if (is(T == RenderTexture)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (p_name.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        T res = LoadRenderTexture(size[0], size[1]); 
+        cache!T(path, res);
+        return res;
+    }
+}
+/// Ditto
+T load(T)(string path) if (is(T == Material)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (path.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        string fp = path.makePath;
+        if (!fp.exists) return nopath!T(fp);
+        T res = (*(LoadMaterials(fp.toStringz, &1)))[0]; 
+        cache!T(path, res);
+        return res;
+    }
+}
+/// Ditto
+T load(T)(string path) if (is(T == ModelAnimation)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (path.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        string fp = path.makePath;
+        if (!fp.exists) return nopath!T(fp);
+        T res = (*(LoadModelAnimations(fp.toStringz, &1)))[0]; 
+        cache!T(path, res);
+        return res;
+    }
+}
+/// Ditto
+T load(T)(string p_name, uint sampleRate, uint sampleSize, uint channels) if (is(T == AudioStream)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (p_name.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        T res = LoadAudioStream(sampleRate, sampleSize, channels); 
+        cache!T(path, res);
+        return res;
+    }
+}
+/// Load resource from raw data or from cache if available
+T loadRaw(T)(string p_name, string vert, string frag) if (is(T == Shader)) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    if (p_name.cached(ptr)) {
+        return (*ptr)._cache[path];
+    } else {
+        T res = LoadShaderFromMemory(vert.toStringz, frag.toStringz); 
+        cache!T(path, res);
+        return res;
     }
 }
 
 /// Caches resource in memory. To remove use uncache
-void cache(T)(string path, T res) if (!isSpecial!T) {
+void cache(T)(string path, T res) {
     ResourceType!T* ptr = getResourcePtr!T();
-    if ((path in (*ptr)._cache) !is null) unload!T(path);
+    if (path.cached(ptr)) unload!T(path);
     (*ptr)._cache[path] = res;
 }
 
+/// Checks if resource is cached
+bool cached(T)(string p_name) {
+    ResourceType!T* ptr = getResourcePtr!T;
+    return p_name.cached(ptr);
+}
+
 /// Removes cached resource and unloads it
-void unload(T)(string path) if (!isSpecial!T) {
+void unload(T)(string path) {
     ResourceType!T* ptr = getResourcePtr!T();
-    if ((path in (*ptr)._cache) !is null) {
+    if (path.cached(ptr)) {
         (*ptr)._unloadFunc((*ptr)._cache[path]); 
         (*ptr)._cache.remove(path);
     }
@@ -81,20 +239,28 @@ void unload(T)(string path) if (!isSpecial!T) {
 /// Ditto
 alias uncache = unload;
 
+/// Explicitly pulls resource from cache, returns T.init if not cached  
+T getCache(T)(string path) {
+    ResourceType!T* ptr = getResourcePtr!T();
+    if (path.cached(ptr)) return (*ptr)._cache[path];
+    return T.init;
+}
+
+
 /// Returns amount of cached resources of type T
-size_t cacheSize(T)() if (!isSpecial!T) {
+size_t cacheSize(T)() {
     ResourceType!T* ptr = getResourcePtr!T();
     return (*ptr)._cache.length;
 }
 
 /// Rehashes cache so it's faster to look up
-void rehashCache(T)() if (!isSpecial!T) {
+void rehashCache(T)() {
     ResourceType!T* ptr = getResourcePtr!T;
     (*ptr)._cache = (*ptr)._cache.rehash;
 }
 
 /// Unloads and clears cache for given resource
-void clearCache(T)() if (!isSpecial!T) {
+void clearCache(T)() {
     ResourceType!T* ptr = getResourcePtr!T;
     foreach (key; (*ptr)._cache.keys) {
         (*ptr)._unloadFunc((*ptr)._cache[key]); 
@@ -102,17 +268,69 @@ void clearCache(T)() if (!isSpecial!T) {
     (*ptr)._cache = null;
 }
 
+void clearCacheAll() {
+    clearCache!Model;
+    clearCache!Image;
+    clearCache!Font;
+    clearCache!Wave;
+    clearCache!Sound;
+    clearCache!Music;
+    clearCache!VrStereoConfig;
+    clearCache!Shader;
+    clearCache!RenderTexture;
+    clearCache!Material;
+    clearCache!ModelAnimation;
+    clearCache!AudioStream;
+    clearCache!Mesh;
+}
 
-private ResourceType!T* getResourcePtr(T)() if (!isSpecial!T) {
+private ResourceType!T* getResourcePtr(T)() {
+    static if (is(T == Model)) {
+        return &_modelResource;
+    } else
+    static if (is(T == Texture)) {
+        return &_textureResource;
+    } else
     static if (is(T == Image)) {
         return &_imageResource;
+    } else
+    static if (is(T == Font)) {
+        return &_fontResource;
+    } else
+    static if (is(T == Wave)) {
+        return &_waveResource;
+    } else
+    static if (is(T == Sound)) {
+        return &_soundResource;
+    } else
+    static if (is(T == Music)) {
+        return &_musicResource;
+    } else
+    static if (is(T == VrStereoConfig)) {
+        return &_vrconfigResource;
+    } else
+    static if (is(T == Shader)) {
+        return &_shaderResource;
+    } else
+    static if (is(T == RenderTexture)) {
+        return &_renderTexResource;
+    } else
+    static if (is(T == Material)) {
+        return &_materialResource;
+    } else
+    static if (is(T == ModelAnimation)) {
+        return &_animationResource;
+    } else
+    static if (is(T == AudioStream)) {
+        return &_audioResource;
+    } else
+    static if (is(T == Mesh)) {
+        return &_meshResource;
     } else {
-        log!FATAL("Unknown resource type \"" ~ T.stringof ~ "\".");
+        fatal("Unknown resource type \"" ~ T.stringof ~ "\".");
         assert(0);
     }
 } 
-
-// TODO: clearCacheAll
 
 private bool isSpecial(T)() {
     static if (is(T == AudioStream)) return true; else
@@ -120,111 +338,39 @@ private bool isSpecial(T)() {
     static if (is(T == ModelAnimation)) return true; else
     static if (is(T == RenderTexture)) return true; else
     static if (is(T == Shader)) return true; else
+    static if (is(T == VrStereoConfig)) return true; else
+    static if (is(T == Mesh)) return true; else
     return false;
 }
 
-import std.uni: toLower;
-import std.format: format;
-
-mixin(resourceMixin!("AudioStream", true, ["sampleRate", "sampleSize", "channels"], ["uint", "uint", "uint"]));
-mixin(resourceMixin!("Shader", true, ["vsFileName", "fsFileName"], ["string", "string"]));
-mixin(resourceMixin!("RenderTexture", true, ["p_width", "p_height"], ["int", "int"]));
-// pragma(msg, resourceMixin!("AudioStream", true, ["sampleRate", "sampleSize", "channels"], ["uint", "uint", "uint"]));
-// pragma(msg, resourceMixin!("Shader", true, ["vsFileName", "fsFileName"], ["string", "string"]));
-// pragma(msg, resourceMixin!("RenderTexture", true, ["p_width", "p_height"], ["int", "int"]));
-// mixin(resourceMixin!("ModelAnimation", false, ["path", "animCount"], ["string", "uint*"]));
-// pragma(msg, resourceMixin!("AudioStream", true, ["sampleRate", "sampleSize", "channels"], ["uint", "uint", "uint"]));
-// TODO: special for materials (ret T*)
-// TODO: special for model animations (ret T*)
-
-string resourceMixin(string typename, bool customIdentifier, string[] args, string[] argtypes)() 
-    if (args.length == argtypes.length) {
-
-    string cachename = "_" ~ typename.toLower ~ "Cache";
-    string loadname = "Load" ~ typename;
-    string unloadname = "Unload" ~ typename;
-    string funcargs = "";
-    string loadargs = "";
-    string idenname = "";
-    string[] pathargs;
-    foreach (i; 0..args.length) {
-        string argtype = argtypes[i];
-        string arg = args[i];
-        if (i != 0) { 
-            funcargs ~= ", ";
-            loadargs ~= ", ";
-        }
-        funcargs ~= "%s %s".format(argtype, arg);
-
-        if (argtype != "string") {
-            loadargs ~= "%s".format(arg);
-        } else {
-            loadargs ~= "fp%s.toStringz".format(arg);
-            pathargs ~= arg;
-        }
-
-    }
-
-    if (customIdentifier || pathargs.length == 0) {
-        funcargs = "string p_name" ~ (funcargs.length > 0 ? ", " : "") ~ funcargs; 
-        idenname = "p_name";
-    } else 
-    if (pathargs.length != 0) {
-        idenname = pathargs[0];
-    } else {
-        assert(0, "Missing resource identifier for " ~ typename ~ ".");
-    }
-
-    string _out = "";
-    
-    _out ~= "private %s[string] %s;\n".format(typename, cachename);
-    _out ~= "/// Load resource from path or from cache if available\n";
-    _out ~= "T load(T)(%s) if (is(T == %s)) {\n".format(funcargs, typename);
-    foreach (pa; pathargs) {
-        _out ~= "    string fp%s = %s.makepath;\n".format(pa, pa);
-        _out ~= "    if (!fp%s.exists) return nopath!T(fp%s);\n".format(pa, pa);
-    }
-    _out ~= "    if ((%s in %s) is null) {\n".format(idenname, cachename);
-    _out ~= "        T res = %s(%s);\n".format(loadname, loadargs);
-    _out ~= "        cache!T(%s, res);\n".format(idenname);
-    _out ~= "        return res;\n";
-    _out ~= "    } else {\n";
-    _out ~= "        return %s[%s];\n".format(cachename, idenname);
-    _out ~= "    }\n";
-    _out ~= "}\n\n";
-
-    _out ~= "/// Caches resource in memory. To remove use uncache\n";
-    _out ~= "void cache(T)(string p_name, T res) if (is(T == %s)) {\n".format(typename);
-    _out ~= "    if ((p_name in %s) !is null) unload!T(p_name);\n".format(cachename);
-    _out ~= "    %s[p_name] = res;\n".format(cachename);
-    _out ~= "}\n\n";
-
-    _out ~= "/// Removes cached resource and unloads it\n";
-    _out ~= "void unload(T)(string p_name) if (is(T == %s)) {\n".format(typename);
-    _out ~= "    if ((p_name in %s) !is null) {\n".format(cachename);
-    _out ~= "        %s(%s[p_name]);\n".format(unloadname, cachename);
-    _out ~= "        %s.remove(p_name);\n".format(cachename);
-    _out ~= "    }\n";
-    _out ~= "}\n\n";
-
-    _out ~= "/// Returns amount of cached resources of type T\n";
-    _out ~= "size_t cacheSize(T)() if (is(T == %s)) {\n".format(typename);
-    _out ~= "    return %s.length;\n".format(cachename);
-    _out ~= "}\n\n";
-
-    _out ~= "/// Rehashes cache so it's faster to look up\n";
-    _out ~= "void rehashCache(T)() if (is(T == %s)) {\n".format(typename);
-    _out ~= "    %s = %s.rehash;\n".format(cachename, cachename);
-    _out ~= "}\n\n";
-
-    _out ~= "/// Unloads and clears cache for given resource\n";
-    _out ~= "void clearCache(T)() if (is(T == %s)) {\n".format(typename);
-    _out ~= "    foreach (key; %s.keys) {\n".format(cachename);
-    _out ~= "        %s(%s[key]);\n".format(unloadname, cachename);
-    _out ~= "    }\n";
-    _out ~= "    %s = null;\n".format(cachename);
-    _out ~= "}\n";
-    
-    return _out;
+private bool isSpecialMulti(T)() {
+    static if (is(T == AudioStream)) return true; else
+    static if (is(T == RenderTexture)) return true; else
+    static if (is(T == Shader)) return true; else
+    static if (is(T == VrStereoConfig)) return true; else
+    static if (is(T == Mesh)) return true; else // mesh doesn't have load function
+    return false;
 }
+
+
+// Load font raw
+// /++
+// Loads font from memory
+// Params:
+//     p_name = Name of resource
+//     filetype = 
+// +/
+// T load(T)(string p_name, string filetype, ubyte[] data, int fontSize, int* fontChars, int glyphCount) 
+//     if (is(T == Font)) {
+//     ResourceType!T* ptr = getResourcePtr!T;
+//     if (p_name.cached(ptr)) {
+//         T res = LoadShaderFromMemory(vert.toStringz, frag.toStringz); 
+//         cache!T(path, res);
+//         return res;
+//     } else {
+//         return (*ptr)._cache[path];
+//     }
+// }
+
+
 

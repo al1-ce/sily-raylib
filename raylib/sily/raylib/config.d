@@ -13,12 +13,14 @@ import raylib;
 import win = sily.raylib.window;
 
 private uint _configFlags = 0;
+/// Returns currently enabled config flags
 uint configFlags() {
     return _configFlags;
 }
 
 private uint _configAll = 0xFFFFFFFF;
 
+/// Resets all config flags
 void stateReset() {
     _configFlags = 0;
     if (win.isInitialised)
@@ -188,12 +190,13 @@ bool stateEnabled(uint flag) {
 }
 
 /**
-    Sets/unsets window/system config, advanced usage, please prefer function variants.
-    Example:
-    ---
-    Window.setState(Window.Config.FLAG_FULLSCREEN_MODE | Window.Config.FLAG_VSYNC_HINT)
-    ---
-    */
+Sets/unsets window/system config, advanced usage, please prefer function variants.
+Example:
+---
+stateEnable(Config.FLAG_FULLSCREEN_MODE | Config.FLAG_VSYNC_HINT);
+stateDisable(Config.FLAG_FULLSCREEN_MODE);
+---
+*/
 void stateEnable(uint conf) {
     // if (_isInit) throw new Error("Window flags must be set before creating window.");
     if (win.isInitialised) {
@@ -226,10 +229,11 @@ void setLogLevel(int l) {
 alias LogLevel = TraceLogLevel;
 
 /// Print debug message, default log level is LOG_INFO
-void traceLog(int l = LogLevel.LOG_INFO)(string message) {
+void traceLog(int l = LogLevel.LOG_DEBUG)(string message) {
     TraceLog(l, message.toStringz);
 }
 
+/// Sets custom trace log callback (must be @nogc nothrow)
 void setTraceLogCallback(TraceLogCallback callback) {
     SetTraceLogCallback(callback);
 }

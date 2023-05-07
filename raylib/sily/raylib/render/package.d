@@ -5,10 +5,13 @@ has primary render functions like [sily.raylib.render.engine.setCamera].
 +/
 module sily.raylib.render;
 
+public import sily.raylib.render.camera;
 public import sily.raylib.render.engine;
-public import sily.raylib.render.image;
-public import sily.raylib.render.model;
-public import sily.raylib.render.shape;
+public import sily.raylib.render.shape2d;
+public import sily.raylib.render.shape3d;
 public import sily.raylib.render.text;
 public import sily.raylib.render.texture;
+public import sily.raylib.render.model;
+
+
 
