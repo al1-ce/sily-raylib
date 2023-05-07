@@ -43,6 +43,9 @@ void crop(ref rImage img, vec4 _crop) {
 // void ImageFormat(Image *image, int newFormat);                                                     // Convert image data to desired format
 // void ImageToPOT(Image *image, Color fill);                                                         // Convert image to POT (power-of-two)
 // void ImageCrop(Image *image, Rectangle crop);                                                      // Crop an image to a defined rectangle
+
+
+
 // void ImageAlphaCrop(Image *image, float threshold);                                                // Crop image depending on alpha value
 // void ImageAlphaClear(Image *image, Color color, float threshold);                                  // Clear alpha channel to desired color
 // void ImageAlphaMask(Image *image, Image alphaMask);                                                // Apply alpha mask to image
