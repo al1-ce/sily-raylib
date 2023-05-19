@@ -1,0 +1,15 @@
+// Font resource signature
+res:type "font"
+
+// Path to load font
+path "path/to/font.ttf"
+// or
+path "path/to/image.png" type="image"
+
+// Font size
+size 12
+
+// If loading image
+first_char 97
+// Ditto. Can be (hex) "#RRGGBBAA" or (ubyte) RRR GGG BBB AAA or (float) R G B A
+color_mask "#2db4a4"

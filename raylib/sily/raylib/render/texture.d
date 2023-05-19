@@ -1,10 +1,38 @@
 module sily.raylib.render.texture;
 
-// // Texture drawing functions
-// void DrawTexture(Texture2D texture, int posX, int posY, Color tint);                               // Draw a Texture2D
-// void DrawTextureV(Texture2D texture, Vector2 position, Color tint);                                // Draw a Texture2D with position defined as Vector2
-// void DrawTextureEx(Texture2D texture, Vector2 position, float rotation, float scale, Color tint);  // Draw a Texture2D with extended parameters
-// void DrawTextureRec(Texture2D texture, Rectangle source, Vector2 position, Color tint);            // Draw a part of a texture defined by a rectangle
-// void DrawTexturePro(Texture2D texture, Rectangle source, Rectangle dest, Vector2 origin, float rotation, Color tint); // Draw a part of a texture defined by a rectangle with 'pro' parameters
-// void DrawTextureNPatch(Texture2D texture, NPatchInfo nPatchInfo, Rectangle dest, Vector2 origin, float rotation, Color tint); // Draws a texture (or part of it) that stretches or shrinks nicely
+import sily.vector;
+import sily.color;
+
+import sily.raylib.raytype;
+
+import rl = raylib;
+
+alias rTexture = rl.Texture;
+alias rRect = rl.Rectangle;
+
+/// Draw texture
+void drawTexture(rTexture tex, int posx, int posy, col tint = Colors.white) {
+    rl.DrawTexture(tex, posx, posy, tint.rayType);
+}
+/// Ditto
+void drawTexture(rTexture tex, vec2 pos, col tint = Colors.white) {
+    rl.DrawTextureV(tex, pos.rayType, tint.rayType);
+}
+/// Ditto
+void drawTexture(rTexture tex, vec2 pos, float rot, float scale, col tint = Colors.white) {
+    rl.DrawTextureEx(tex, pos.rayType, rot, scale, tint.rayType);
+}
+/// Ditto
+void drawTexture(rTexture tex, vec4 srcRect, vec2 pos, col tint = Colors.white) {
+    rl.DrawTextureRec(tex, rayType!rRect(srcRect), pos.rayType, tint.rayType);
+}
+/// Ditto
+void drawTexture(rTexture tex, vec4 srcRect, vec4 dstRect, vec2 origin, float rot, col tint = Colors.white) {
+    rl.DrawTexturePro(tex, rayType!rRect(srcRect), rayType!rRect(dstRect), origin.rayType, rot, tint.rayType);
+}
+/// Ditto
+void drawTexture(rTexture tex, rl.NPatchInfo pi, vec4 dstRect, vec2 origin, float rot, col tint = Colors.white) {
+    rl.DrawTextureNPatch(tex, pi, rayType!rRect(dstRect), origin.rayType, rot, tint.rayType);
+}
+
 

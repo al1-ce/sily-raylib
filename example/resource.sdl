@@ -1,0 +1,61 @@
+/**
+Example SDLang format, base language is https://sdlang.org/
+This file will cover most of what can be expected in sdl resource.
+
+Also this file is a self-documentation of features that will be
+present in custom resource parser for sily-raylib.
+
+Although it might seem so, this file is not a valid resource itself
+ */
+
+// Resource can be either resource or scene
+/**
+Resource must define a type and size
+Scene must define a size
+
+Type must be valid resource type (Texture, File, Material, etc...)
+Size must be exact amount of resources in this file + 1
+ */
+res:type "resource" size=3 uid="uid://8f8ccsa32"
+// TODO: possibly add UID for resources
+
+// You can also define sub resources
+res:local "resource_id" type="type" {
+    // It can have any amount or types of settings with no namespace
+    color_hex "#f40a1c"
+    color_rgb 125 24 255 2
+    color_rgb 0.2 0.4 1 0.6
+    sky resource="sub_resource_id"
+    curve 0.1245
+    transform {
+        1 0 0 0
+        0 1 0 0
+        0 0 1 0
+        0 0 0 1
+    }
+    enabled on
+}
+
+// TODO: possibly define paths with URI res:// or file://
+// Resources can be local to scene (will not change base resource)
+// and they will be marked with local=true
+res:external "external_res" type="type" path="res://path/to/resource" local=true
+
+// TODO: go gameobjects need types?
+// If resource is a scene then it can have gameobjects attached to it
+res:node "name" type="type" parent="parent/path" {
+    // It can have any components (taken name)
+    component "component_name" type="className" {
+        // Component settings
+        enabled true
+        speed 0.24
+        gravity 9.8
+    }
+    component "generic_component" type="imGeneric"
+    // TODO: And some basic settings
+}
+
+// TODO: Local resource properties
+prop 3
+prop_next "super"
+

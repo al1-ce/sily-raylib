@@ -3,12 +3,30 @@ description "Personal wrapper for raylib-d"
 authors "Alisa Lain"
 copyright "Copyright © 2023, Alisa Lain"
 license "MIT"
-dependency "sily" path="/g/sily-dlang/" // version="~>1.4.1"
+
+dependency "sily" path="/g/sily-dlang/" platform="posix" // version="~>2.1.0"
+dependency "sily:sdlang" path="/g/sily-dlang/" platform="posix" // version="~>2.1.0"
+dependency "sily-terminal:logger" path="/g/sily-terminal/" platform="posix" // version="~>2.1.0"
+dependency "sily-gamelib:bindbc" path="/g/sily-gamelib" platform="posix"
+// dependency "sily-gamelib:opengl" path="/g/sily-gamelib" platform="posix"
+dependency "sily-gamelib:sdl" path="/g/sily-gamelib" platform="posix"
+
+// dependency "sily" path="/g:/sily-dlang/" platform="windows" // version="~>2.1.0"
+// dependency "sily:sdlang" path="/g:/sily-dlang/" platform="windows" // version="~>2.1.0"
+// dependency "sily-terminal:logger" path="/g:/sily-terminal/" platform="windows" // version="~>2.1.0"
+// dependency "sily-gamelib:bindbc" path="/g:/sily-gamelib" platform="windows"
+// // dependency "sily-gamelib:opengl" path="/g:/sily-gamelib" platform="windows"
+// dependency "sily-gamelib:sdl" path="/g:/sily-gamelib" platform="windows"
+
 dependency "raylib-d" version="~>4.5.1"
+
+libs "raylib"
 sourcePaths "raylib/"
 importPaths "raylib/"
+
 targetType "library"
 targetPath "bin/"
 
+versions "GL_33" "GL_ARB"
 
 

@@ -147,7 +147,7 @@ AABB rayType(rl.BoundingBox aabb) {
     return AABB(aabb.min.rayType, aabb.max.rayType);
 }
 
-// // File path list
+// TODO: File path list
 // struct FilePathList
 // {
 //     uint capacity; // Filepaths max entries

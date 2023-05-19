@@ -1,0 +1,12 @@
+// Texture resource signature
+res:type "texture"
+
+// Sets path to load texture from
+path "path/to/texture.png"
+
+// Toggles and sets mipmap level (how much mipmaps generated), default level 1
+mipmaps on level=1
+// 0 - nearest, 1 - bilinear, 2 - trilinear, 3, 4, 5 - 4, 8, 16 anisotropic
+filter 0
+// 0 - repeat, 1 - clamp. 2 - mirror repeat, 3 - mirror clamp
+wrap 0

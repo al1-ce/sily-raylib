@@ -1,0 +1,35 @@
+// Scene resource example
+res:type "scene" size=4
+
+res:external "custom_font" type="font" path="res://exampler/resources/font.sdl"
+res:external "custom_texture" type="texture" path="res://exampler/resources/texture.sdl"
+
+res:local "custom_audio" type="audio" {
+    path "path/to/audio.wav"
+    volume 1
+    pitch 0.76
+    pan 0.6
+}
+
+res:node "gameobject" {
+    component "transform" type="Transform2D" {
+        position 0 2
+        rotation 0.24
+        scale 0.2 4
+    }
+
+    component "physics" type="Physics2D" {
+        gravity 9.8
+        vector 0 -1
+        mask 5
+    }
+
+    component "custom_logic" type="CustomComponent2D" {
+        render_font "custom_font"
+        hit_audio "custom_audio"
+    }
+
+    component "texture" type="Texture2D" {
+        texture "custom_texture"
+    }
+}

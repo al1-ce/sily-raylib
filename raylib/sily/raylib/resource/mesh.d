@@ -7,6 +7,8 @@ import sily.vector;
 
 import rl = raylib;
 
+public import raylib: Mesh;
+
 alias rModel = rl.Model;
 alias rMesh = rl.Mesh;
 alias rMaterial = rl.Material;

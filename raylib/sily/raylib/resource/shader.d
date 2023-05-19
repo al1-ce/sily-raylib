@@ -10,6 +10,8 @@ import std.string: toStringz;
 
 import rl = raylib;
 
+public import raylib: Shader;
+
 alias rShader = rl.Shader;
 alias rTexture = rl.Texture;
 

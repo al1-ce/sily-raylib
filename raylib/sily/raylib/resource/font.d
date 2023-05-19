@@ -1,14 +1,76 @@
 module sily.raylib.resource.font;
 
-// // Font loading/unloading functions
-// Font GetFontDefault(void);                                                            // Get the default Font
-// Font LoadFont(const char *fileName);                                                  // Load font from file into GPU memory (VRAM)
-// Font LoadFontEx(const char *fileName, int fontSize, int *fontChars, int glyphCount);  // Load font from file with extended parameters, use NULL for fontChars and 0 for glyphCount to load the default character set
-// Font LoadFontFromImage(Image image, Color key, int firstChar);                        // Load font from Image (XNA style)
-// Font LoadFontFromMemory(const char *fileType, const unsigned char *fileData, int dataSize, int fontSize, int *fontChars, int glyphCount); // Load font from memory buffer, fileType refers to extension: i.e. '.ttf'
-// bool IsFontReady(Font font);                                                          // Check if a font is ready
-// GlyphInfo *LoadFontData(const unsigned char *fileData, int dataSize, int fontSize, int *fontChars, int glyphCount, int type); // Load font data for further use
-// Image GenImageFontAtlas(const GlyphInfo *chars, Rectangle **recs, int glyphCount, int fontSize, int padding, int packMethod); // Generate image font atlas using chars info
-// void UnloadFontData(GlyphInfo *chars, int glyphCount);                                // Unload font chars info data (RAM)
-// void UnloadFont(Font font);                                                           // Unload font from GPU memory (VRAM)
-// bool ExportFontAsCode(Font font, const char *fileName);                               // Export font as code file, returns true on success
+import sily.raylib.resource.manager;
+import sily.raylib.raytype;
+import sily.raylib.log;
+
+import sily.color;
+
+import rl = raylib;
+
+public import raylib: Font;
+
+alias rFont = rl.Font;
+
+// load!rFont(path) is implemented in resource manager
+// unload!rFont(path) is implemented in resource manager
+
+import std.file: isDir, exists;
+import std.path: isValidPath, buildNormalizedPath, dirSeparator;
+import std.string: toStringz;
+import std.conv: to;
+
+private string makePath(string path) {
+    return resourcePath ~ dirSeparator ~ path;
+}
+
+/// Loads font from file or cache
+rFont loadFont(string path, int fontSize, char[] fontChars) {
+    if (cached!rFont(path)) {
+        string fp = path.makePath;
+        if (!fp.exists) return nopath!rFont(fp);
+        rFont res = rl.LoadFontEx(fp.toStringz, fontSize, cast(int*) fontChars.ptr, cast(int) fontChars.length);
+        cache!rFont(path, res);
+        return res;
+    } else {
+        return load!rFont(path);
+    }
+}
+
+/// Loads font from file or cache
+rFont loadFont(string p_name, rl.Image img, col key, char firstChar) {
+    if (cached!rFont(p_name)) {
+        rFont res = rl.LoadFontFromImage(img, key.rayType, cast(int) firstChar);
+        cache!rFont(p_name, res);
+        return res;
+    } else {
+        return load!rFont(p_name);
+    }
+}
+
+/// Loads font from file or cache
+rFont loadFont(string name, string ftype, string data, int fontSize, char[] fontChars) {
+    if (cached!rFont(name)) {
+        rFont res = rl.LoadFontFromMemory(
+                ftype.toStringz, cast(const(ubyte)*) data.toStringz, cast(int) data.length, 
+                fontSize, cast(int*) fontChars.ptr, cast(int) fontChars.length
+                );
+        cache!rFont(name, res);
+        return res;
+    } else {
+        return load!rFont(name);
+    }
+}
+
+/// Returns default material
+rFont defaultFont() {
+    return rl.GetFontDefault();
+}
+
+/// Checks if font is successfully loaded
+bool isFontReady(rFont font) {
+    return rl.IsFontReady(font);
+}
+
+// TODO: glyphs
+

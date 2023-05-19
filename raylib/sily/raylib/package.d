@@ -27,4 +27,5 @@ public import sily.raylib.physics;
 public import sily.raylib.render;
 public import sily.raylib.resource;
 public import sily.raylib.window;
+public import sily.raylib.types;
 

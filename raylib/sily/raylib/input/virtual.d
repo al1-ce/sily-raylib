@@ -2,6 +2,8 @@
 module sily.raylib.input.virtual;
 
 import sily.raylib.input.keyboard;
+import sily.raylib.input.gamepad;
+import sily.raylib.input.joystick;
 
 import sily.vector;
 
@@ -10,48 +12,14 @@ import sily.vector;
 //     cancel, older, newer
 // }
 
-/// Single virtual axis (i.e map left-right to -1.0..1.0)
-struct VirtualAxis {
-    private Key _pos;
-    private Key _neg;
-
-    @disable this();
-    
-    /++
-    Creates virtual axis
-    Params:
-        pos = Positive axis key (to be +1)
-        neg = Negative axis key (to be -1)
-    +/
-    this(Key pos, Key neg) {
-        _pos = pos;
-        _neg = neg;
-    }
-    
-    /// Returns virtual axis state
-    float axis() {
-        if (_pos.isPressed && _neg.isPressed) {
-            return 0.0f;
-        } else
-        if (_pos.isPressed) {
-            return 1.0f;
-        } else 
-        if (_neg.isPressed) {
-            return -1.0f;
-        } else {
-            return 0.0f;
-        }
-    }
-}
-
 /// N-size virtual axis (i.e map left-right to x=-1.0..1.0 and down-up to y=-1.0..1.0, etc)
 struct VirtualController(size_t N) if (N > 0) {
-    private Key[N] pos;
-    private Key[N] neg;
+    @disable this();
 
     alias Axis = Vector!(float, N);
 
-    @disable this();
+    private Key[N] pos;
+    private Key[N] neg;
 
     /++
     Creates virtual axis
@@ -70,7 +38,7 @@ struct VirtualController(size_t N) if (N > 0) {
             neg[i] = keys[i * 2 + 1];
         }
     }
-    
+
     /// Returns virtual axis state as normalised vector
     Axis axis() {
         Axis a = 0;
@@ -96,6 +64,50 @@ struct VirtualController(size_t N) if (N > 0) {
     }
 }
 
+/// N-size virtual axis merging Joystick axis together
+struct VirtualJoystick(size_t N) if (N > 0) {
+    @disable this();
+
+    alias Axis = Vector!(float, N);
+
+    private int[N] _axis;
+    private int[N] _idx;
+
+    /++
+    Creates virtual axis
+    Params:
+        p_vals = Array of gamepad axis (joyIDX, joyAXIS, joyIDX, joyAXIS)
+    Example:
+    ---
+    auto vc2 = VirtualController!(2, JoystickAxis)(0, 0, 0, 1, 1, 4);
+    auto vc1 = VirtualController!(1, JoystickAxis)(0, 1);
+    ---
+    +/
+    this(int[N * 2] p_vals...) {
+        for (int i = 0; i < N; ++i) {
+            _idx[i] = p_vals[i * 2];
+            _axis[i] = p_vals[i * 2 + 1];
+        }
+    }
+
+    /// Returns virtual axis state as normalised vector
+    Axis axis() {
+        Axis a = 0;
+
+        foreach (i; 0..N) {
+            a[i] = joyAxis(_idx[i], _axis[i]);
+        }
+
+        if (!a.isNormalised) {
+            a.normalise();
+        }
+        return a;
+    }
+}
+
+/// TODO: virtual gamepad
+
 /// Double virtual axis (i.e map left-right to x=-1.0..1.0 and down-up to y=-1.0..1.0)
+alias VirtualAxis = VirtualController!1;
 alias VirtualJoy = VirtualController!2;
 

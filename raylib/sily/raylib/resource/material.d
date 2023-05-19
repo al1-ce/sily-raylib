@@ -6,6 +6,8 @@ import sily.raylib.log;
 
 import rl = raylib;
 
+public import raylib: Material;
+
 alias rModel = rl.Model;
 alias rMesh = rl.Mesh;
 alias rMaterial = rl.Material;

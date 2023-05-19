@@ -34,12 +34,13 @@ void drawText(string text, ivec2 pos, ivec2 origin, float rotation,
             fontSize, spacing, p_color.rayType);
 }
 
-// TODO: func
+/// Returns text width with current font
+int textWidth(string text, int fontSize) {
+    return MeasureText(text.toStringz, fontSize);
+}
 
-// // Text font info functions
-// int MeasureText(const char *text, int fontSize);                                      // Measure string width for default font
-// Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing);    // Measure string size for Font
-// int GetGlyphIndex(Font font, int codepoint);                                          // Get glyph index position in font for a codepoint (unicode character), fallback to '?' if not found
-// GlyphInfo GetGlyphInfo(Font font, int codepoint);                                     // Get glyph font info data for a codepoint (unicode character), fallback to '?' if not found
-// Rectangle GetGlyphAtlasRec(Font font, int codepoint);                                 // Get glyph rectangle in font atlas for a codepoint (unicode character), fallback to '?' if not found
+/// Returns text size with selected font and settings
+vec2 textSize(Font font, string text, float fontSize, float spacing) {
+    return MeasureTextEx(font, text.toStringz, fontSize, spacing).rayType;
+}
 
